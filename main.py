@@ -27,7 +27,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• `buy 100, Supplier, 500` → Bought 100g from Supplier\n\n"
         "**📊 Analytics**\n"
         "• `/report <period>` → Summary (daily/weekly/monthly)\n"
-        "• `/detailed <period>` → Breakdown by person\n"
+        "• `/detailed <period>` → Full transaction list + stats\n"
         "• `/sales <name>` → History for a specific person\n"
         "• `/sales` → Your own history"
     )

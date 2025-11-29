@@ -112,19 +112,61 @@ def generate_detailed_report(period='weekly'):
     if period_df.empty:
         return "No data."
 
-    # Group by Seller
-    report = f"📝 **Detailed Report ({period})**\n"
+    # Calculate aggregate stats for the period
+    sales = period_df[period_df['Action'] == 'Sale']
+    buys = period_df[period_df['Action'] == 'Buy']
     
-    sellers = period_df['Seller'].unique()
-    for seller in sellers:
-        seller_df = period_df[period_df['Seller'] == seller]
-        sales = seller_df[seller_df['Action'] == 'Sale']
+    total_sales = sales['Price(INR)'].sum()
+    total_cost = buys['Price(INR)'].sum()
+    profit = total_sales - total_cost
+    
+    # Volume Stats
+    vol_sold = sales['Amount(g)'].sum()
+    vol_bought = buys['Amount(g)'].sum()
+    
+    # Averages
+    avg_sale_price = (total_sales / vol_sold) if vol_sold > 0 else 0
+    avg_buy_cost = (total_cost / vol_bought) if vol_bought > 0 else 0
+    
+    # Top Buyer (by Revenue)
+    top_buyer = "N/A"
+    if not sales.empty:
+        top_buyer_stats = sales.groupby('Buyer/Source')['Price(INR)'].sum().sort_values(ascending=False)
+        if not top_buyer_stats.empty:
+            top_buyer = f"{top_buyer_stats.index[0]} (₹{top_buyer_stats.iloc[0]})"
+
+    report = f"📝 **Detailed Report ({period})**\n\n"
+    
+    report += f"**💰 Financials:**\n"
+    report += f"• Revenue: ₹{total_sales:,.2f}\n"
+    report += f"• Cost: ₹{total_cost:,.2f}\n"
+    report += f"• Profit: ₹{profit:,.2f}\n\n"
+    
+    report += f"**📦 Inventory & Volume:**\n"
+    report += f"• Sold: {vol_sold}g (Avg: ₹{avg_sale_price:.2f}/g)\n"
+    report += f"• Bought: {vol_bought}g (Avg: ₹{avg_buy_cost:.2f}/g)\n"
+    report += f"• Txns: {len(sales)} Sales, {len(buys)} Buys\n"
+    report += f"• Top Buyer: {top_buyer}\n\n"
+    
+    report += "**📋 All Transactions:**\n"
+    report += "```\n"
+    report += f"{'Date':<10} | {'Act':<4} | {'Entity':<10} | {'Amt':<5} | {'Price'}\n"
+    report += "-"*50 + "\n"
+    
+    # Sort by timestamp descending (newest first)
+    period_df = period_df.sort_values('Timestamp', ascending=False)
+    
+    for _, row in period_df.iterrows():
+        date_str = row['Timestamp'].strftime('%Y-%m-%d')
+        action = "Sale" if row['Action'] == 'Sale' else "Buy"
+        action = action[:4] # Truncate
+        entity = str(row['Buyer/Source'])[:10]
+        amt = str(row['Amount(g)'])
+        price = str(row['Price(INR)'])
         
-        if not sales.empty:
-            report += f"\n👤 **{seller}**:\n"
-            for _, row in sales.iterrows():
-                report += f"  - Sold {row['Amount(g)']}g to {row['Buyer/Source']} for {row['Price(INR)']}\n"
-                
+        report += f"{date_str:<10} | {action:<4} | {entity:<10} | {amt:<5} | {price}\n"
+        
+    report += "```"
     return report
 
 def generate_person_report(person_name):
