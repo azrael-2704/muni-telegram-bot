@@ -1,0 +1,13 @@
+# Secrets
+.env
+telegram-bot-427.json
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
