@@ -17,16 +17,30 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = (
+        "🌸 **Flower Bot Help** 🌸\n\n"
+        "**📝 Logging Transactions**\n"
+        "• `100, 500` → Sold 100g for 500\n"
+        "• `100, Alice, 500` → Sold 100g to Alice for 500\n"
+        "• `buy 100, 500` → Bought 100g for 500\n"
+        "• `buy 100, Supplier, 500` → Bought 100g from Supplier\n\n"
+        "**📊 Analytics**\n"
+        "• `/report <period>` → Summary (daily/weekly/monthly)\n"
+        "• `/detailed <period>` → Breakdown by person\n"
+        "• `/sales <name>` → History for a specific person\n"
+        "• `/sales` → Your own history"
+    )
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=help_text, parse_mode='Markdown')
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=(
-            "I'm ready to track your flower business! 🌸\n\n"
-            "**Commands:**\n"
-            "• `I Sold <amount> gram to <buyer> for <price> rupees`\n"
-            "• `I Bought <amount> gram from <seller> for <price> rupees`\n"
-            "• `/report <daily|weekly|monthly>`\n"
-            "• `/detailed <daily|weekly|monthly>`"
+            "👋 **Welcome to the Flower Sales Bot!**\n\n"
+            "I help you track sales, purchases, and profits.\n"
+            "Data is saved to Google Sheets automatically.\n\n"
+            "Type `/help` to see all available commands and how to log data."
         ),
         parse_mode='Markdown'
     )
@@ -127,6 +141,7 @@ if __name__ == '__main__':
     application = ApplicationBuilder().token(token).build()
 
     application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('help', help_command))
     application.add_handler(CommandHandler('report', report_command))
     application.add_handler(CommandHandler('detailed', detailed_command))
     application.add_handler(CommandHandler('sales', sales_command))
