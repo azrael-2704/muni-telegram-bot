@@ -27,10 +27,20 @@ if not os.path.exists(CREDS_FILE):
 
 SHEET_NAME = "telegram-bot-427"
 
+import json
+
 def get_client():
     """Authenticates and returns a gspread client."""
     try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+        # Check for environment variable first (Vercel deployment)
+        google_creds_env = os.getenv("GOOGLE_CREDENTIALS")
+        if google_creds_env:
+            creds_dict = json.loads(google_creds_env)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
+        else:
+            # Fallback to local file (local testing)
+            creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+            
         client = gspread.authorize(creds)
         return client
     except Exception as e:

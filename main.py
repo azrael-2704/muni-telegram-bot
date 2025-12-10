@@ -124,13 +124,27 @@ async def sales_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"⏳ Generating report for {target_name}...")
     
+    # Parse response logic here?
+    # Looks like we missed the implementation of sales_command body in previous edits or it was cut off.
+    # Restoring the end of sales_command and adding proper app initialization.
+    
     # We need to import generate_person_report inside or at top. 
-    # Since I can't easily edit top imports without reading whole file, I'll do a local import or assume it's added.
-    # Actually, I should update the import at the top first. But for now let's assume I will fix imports in next step.
     from analytics import generate_person_report
     report_text = generate_person_report(target_name)
     
     await context.bot.send_message(chat_id=update.effective_chat.id, text=report_text, parse_mode='Markdown')
+
+# Initialize app globally for Vercel import
+app = None
+if os.getenv('TELEGRAM_BOT_TOKEN'):
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    app = ApplicationBuilder().token(token).build()
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('help', help_command))
+    app.add_handler(CommandHandler('report', report_command))
+    app.add_handler(CommandHandler('detailed', detailed_command))
+    app.add_handler(CommandHandler('sales', sales_command))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
 if __name__ == '__main__':
     token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -138,17 +152,8 @@ if __name__ == '__main__':
         print("Error: TELEGRAM_BOT_TOKEN not found in .env file.")
         exit(1)
 
-    application = ApplicationBuilder().token(token).build()
-
-    application.add_handler(CommandHandler('start', start))
-    application.add_handler(CommandHandler('help', help_command))
-    application.add_handler(CommandHandler('report', report_command))
-    application.add_handler(CommandHandler('detailed', detailed_command))
-    application.add_handler(CommandHandler('sales', sales_command))
+    application = app
     
-    # Filter for text messages that are not commands
-    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
     print("Bot is running...")
     
     # Check for MODE environment variable
@@ -172,3 +177,4 @@ if __name__ == '__main__':
     else:
         print("Starting polling...")
         application.run_polling()
+
